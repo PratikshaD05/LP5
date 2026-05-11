@@ -1,0 +1,139 @@
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <algorithm>
+#include <ctime>
+#include <iomanip>
+
+using namespace std;
+
+// Sequential Bubble Sort
+void bubble_sort(vector<int>& arr) {
+
+    int n = arr.size();
+
+    for (int i = 0; i < n; i++) {
+
+        for (int j = 0; j < n - i - 1; j++) {
+
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
+            }
+        }
+    }
+}
+
+// Parallel Bubble Sort using Threads
+void parallel_sort(vector<int>& arr) {
+
+    int n = arr.size();
+    int mid = n / 2;
+
+    vector<int> left(arr.begin(), arr.begin() + mid);
+    vector<int> right(arr.begin() + mid, arr.end());
+
+    // Create threads
+    thread t1(bubble_sort, ref(left));
+    thread t2(bubble_sort, ref(right));
+
+    // Wait for threads to finish
+    t1.join();
+    t2.join();
+
+    // Merge two sorted halves
+    int i = 0, j = 0, k = 0;
+
+    vector<int> result(n);
+
+    while (i < left.size() && j < right.size()) {
+
+        if (left[i] < right[j]) {
+            result[k++] = left[i++];
+        }
+        else {
+            result[k++] = right[j++];
+        }
+    }
+
+    while (i < left.size()) {
+        result[k++] = left[i++];
+    }
+
+    while (j < right.size()) {
+        result[k++] = right[j++];
+    }
+
+    arr = result;
+}
+
+int main() {
+
+    int n;
+
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    vector<int> arr(n);
+
+    cout << "Enter elements: ";
+
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+
+    cout << "\nOriginal Array: ";
+
+    for (int x : arr) {
+        cout << x << " ";
+    }
+
+    cout << endl;
+
+    // ─── Sequential Sorting ───
+    vector<int> sequentialArray = arr;
+
+    clock_t start = clock();
+
+    bubble_sort(sequentialArray);
+
+    clock_t end = clock();
+
+    double sequentialTime =
+        (double)(end - start) / CLOCKS_PER_SEC;
+
+    cout << "\nSequential Bubble Sort: ";
+
+    for (int x : sequentialArray) {
+        cout << x << " ";
+    }
+
+    cout << fixed << setprecision(6);
+
+    cout << "\nTime: "
+         << sequentialTime
+         << " sec\n";
+
+    // ─── Parallel Sorting ───
+    vector<int> parallelArray = arr;
+
+    start = clock();
+
+    parallel_sort(parallelArray);
+
+    end = clock();
+
+    double parallelTime =
+        (double)(end - start) / CLOCKS_PER_SEC;
+
+    cout << "\nParallel Bubble Sort: ";
+
+    for (int x : parallelArray) {
+        cout << x << " ";
+    }
+
+    cout << "\nTime: "
+         << parallelTime
+         << " sec\n";
+
+    return 0;
+}
